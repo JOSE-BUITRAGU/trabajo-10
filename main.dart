@@ -12,12 +12,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Formularios Flutter ',
-      theme: ThemeData(useMaterial3: true),
+      title: 'Formularios Flutter',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+      ),
       home: const HomeScreen(),
     );
   }
 }
+
+////////////////////////////////////////////////////////////
+/// HOME
+////////////////////////////////////////////////////////////
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Formularios ")),
+      appBar: AppBar(title: const Text("Formularios Interactivos")),
       body: screens[index],
       bottomNavigationBar: NavigationBar(
         selectedIndex: index,
@@ -46,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.poll), label: "Encuesta"),
           NavigationDestination(icon: Icon(Icons.circle), label: "Cilindro"),
-          NavigationDestination(icon: Icon(Icons.money), label: "Propina"),
+          NavigationDestination(icon: Icon(Icons.attach_money), label: "Propina"),
         ],
       ),
     );
@@ -63,8 +70,10 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(title,
-        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold));
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+    );
   }
 }
 
@@ -77,14 +86,14 @@ class ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
+      elevation: 5,
       margin: const EdgeInsets.only(top: 20),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(children: [
           Text(title,
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const Divider(),
           ...children
         ]),
@@ -94,7 +103,7 @@ class ResultCard extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////
-/// ENCUESTA (MEJORADA)
+/// ENCUESTA (NIVEL PRO)
 ////////////////////////////////////////////////////////////
 
 class EncuestaScreen extends StatefulWidget {
@@ -113,7 +122,13 @@ class _EncuestaScreenState extends State<EncuestaScreen> {
   int? calidad;
   int? atencion;
 
+  bool c1 = false;
+  bool c2 = false;
+  bool c3 = false;
+  bool c4 = false;
+
   bool enviado = false;
+  String comentarioGuardado = '';
 
   Widget estrellas(int value) {
     return Row(
@@ -152,6 +167,15 @@ class _EncuestaScreenState extends State<EncuestaScreen> {
     );
   }
 
+  String caracteristicas() {
+    List<String> lista = [];
+    if (c1) lista.add("Atención");
+    if (c2) lista.add("Tiempo");
+    if (c3) lista.add("Facilidad");
+    if (c4) lista.add("Precio/Calidad");
+    return lista.isEmpty ? "Ninguna" : lista.join(", ");
+  }
+
   void enviar() {
     if (!_formKey.currentState!.validate()) return;
 
@@ -165,9 +189,12 @@ class _EncuestaScreenState extends State<EncuestaScreen> {
       return;
     }
 
-    setState(() => enviado = true);
+    setState(() {
+      enviado = true;
+      comentarioGuardado = _comentario.text;
+    });
 
-    _comentario.clear(); // 🔥 LIMPIA EL CAMPO
+    _comentario.clear();
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Encuesta enviada correctamente")),
@@ -181,16 +208,44 @@ class _EncuestaScreenState extends State<EncuestaScreen> {
       child: Form(
         key: _formKey,
         child: Column(children: [
-          const SectionHeader("Encuesta"),
+          const SectionHeader("Encuesta de satisfacción"),
 
           pregunta("Servicio", servicio, (v) => setState(() => servicio = v)),
           pregunta("Precio", precio, (v) => setState(() => precio = v)),
           pregunta("Calidad", calidad, (v) => setState(() => calidad = v)),
           pregunta("Atención", atencion, (v) => setState(() => atencion = v)),
 
+          const SizedBox(height: 10),
+
+          const Text("Características que te gustaron"),
+          CheckboxListTile(
+            title: const Text("Atención al cliente"),
+            value: c1,
+            onChanged: (v) => setState(() => c1 = v!),
+          ),
+          CheckboxListTile(
+            title: const Text("Tiempo de respuesta"),
+            value: c2,
+            onChanged: (v) => setState(() => c2 = v!),
+          ),
+          CheckboxListTile(
+            title: const Text("Facilidad de uso"),
+            value: c3,
+            onChanged: (v) => setState(() => c3 = v!),
+          ),
+          CheckboxListTile(
+            title: const Text("Precio / calidad"),
+            value: c4,
+            onChanged: (v) => setState(() => c4 = v!),
+          ),
+
           TextFormField(
             controller: _comentario,
-            decoration: const InputDecoration(labelText: "Comentario"),
+            decoration: InputDecoration(
+              labelText: "Comentario",
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             validator: (v) =>
                 v == null || v.isEmpty ? "Escribe un comentario" : null,
           ),
@@ -207,7 +262,8 @@ class _EncuestaScreenState extends State<EncuestaScreen> {
                 Text("Precio: $precio"),
                 Text("Calidad: $calidad"),
                 Text("Atención: $atencion"),
-                Text("Comentario enviado correctamente"),
+                Text("Características: ${caracteristicas()}"),
+                Text("Comentario: $comentarioGuardado"),
               ],
             )
         ]),
@@ -217,7 +273,7 @@ class _EncuestaScreenState extends State<EncuestaScreen> {
 }
 
 ////////////////////////////////////////////////////////////
-/// CILINDRO (CON SELECTOR)
+/// CILINDRO (VALIDADO)
 ////////////////////////////////////////////////////////////
 
 class CilindroScreen extends StatefulWidget {
@@ -235,8 +291,22 @@ class _CilindroScreenState extends State<CilindroScreen> {
   double? resultado;
 
   void calcular() {
-    double r = double.parse(rCtrl.text);
-    double h = double.parse(hCtrl.text);
+    if (rCtrl.text.isEmpty || hCtrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Completa los campos")),
+      );
+      return;
+    }
+
+    final r = double.tryParse(rCtrl.text);
+    final h = double.tryParse(hCtrl.text);
+
+    if (r == null || h == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Valores inválidos")),
+      );
+      return;
+    }
 
     setState(() {
       if (opcion == "Volumen") {
@@ -255,16 +325,27 @@ class _CilindroScreenState extends State<CilindroScreen> {
       padding: const EdgeInsets.all(20),
       child: Column(children: [
         const SectionHeader("Cilindro"),
-        TextField(controller: rCtrl, decoration: const InputDecoration(labelText: "Radio")),
-        TextField(controller: hCtrl, decoration: const InputDecoration(labelText: "Altura")),
 
-        DropdownButton<String>(
+        TextFormField(
+          controller: rCtrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "Radio"),
+        ),
+        TextFormField(
+          controller: hCtrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "Altura"),
+        ),
+
+        DropdownButtonFormField(
           value: opcion,
           items: ["Volumen", "Área lateral", "Área total"]
               .map((e) => DropdownMenuItem(value: e, child: Text(e)))
               .toList(),
           onChanged: (v) => setState(() => opcion = v!),
         ),
+
+        const SizedBox(height: 10),
 
         ElevatedButton(onPressed: calcular, child: const Text("Calcular")),
 
@@ -279,7 +360,7 @@ class _CilindroScreenState extends State<CilindroScreen> {
 }
 
 ////////////////////////////////////////////////////////////
-/// PROPINA
+/// PROPINA (VALIDADA)
 ////////////////////////////////////////////////////////////
 
 class PropinaScreen extends StatefulWidget {
@@ -291,13 +372,31 @@ class PropinaScreen extends StatefulWidget {
 
 class _PropinaScreenState extends State<PropinaScreen> {
   final ctrl = TextEditingController();
+
   int porcentaje = 10;
   double? total;
+  double? propina;
 
   void calcular() {
-    double cuenta = double.parse(ctrl.text);
+    if (ctrl.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Ingresa un valor")),
+      );
+      return;
+    }
+
+    final cuenta = double.tryParse(ctrl.text);
+
+    if (cuenta == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Número inválido")),
+      );
+      return;
+    }
+
     setState(() {
-      total = cuenta + (cuenta * porcentaje / 100);
+      propina = cuenta * porcentaje / 100;
+      total = cuenta + propina!;
     });
   }
 
@@ -307,9 +406,14 @@ class _PropinaScreenState extends State<PropinaScreen> {
       padding: const EdgeInsets.all(20),
       child: Column(children: [
         const SectionHeader("Propina"),
-        TextField(controller: ctrl, decoration: const InputDecoration(labelText: "Cuenta")),
 
-        DropdownButton<int>(
+        TextFormField(
+          controller: ctrl,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(labelText: "Total de la cuenta"),
+        ),
+
+        DropdownButtonFormField(
           value: porcentaje,
           items: [10, 15, 20]
               .map((e) => DropdownMenuItem(value: e, child: Text("$e%")))
@@ -317,12 +421,17 @@ class _PropinaScreenState extends State<PropinaScreen> {
           onChanged: (v) => setState(() => porcentaje = v!),
         ),
 
+        const SizedBox(height: 10),
+
         ElevatedButton(onPressed: calcular, child: const Text("Calcular")),
 
         if (total != null)
           ResultCard(
-            title: "Total a pagar",
-            children: [Text("\$${total!.toStringAsFixed(0)}")],
+            title: "Resultado",
+            children: [
+              Text("Propina: \$${propina!.toStringAsFixed(0)}"),
+              Text("Total a pagar: \$${total!.toStringAsFixed(0)}"),
+            ],
           )
       ]),
     );
